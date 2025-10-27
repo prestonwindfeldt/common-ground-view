@@ -1,36 +1,77 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Common Ground
+
+A digital experience that helps people find connection through shared perspectives of America's National Parks.
+
+## About
+
+**Common Ground** is built using the [National Parks Service (NPS) Webcams API](https://www.nps.gov/subjects/developer/api-documentation.htm#/webcams/getWebcams) and Next.js, deployed on Vercel. The project explores how digital encounters can remind people of their shared humanity and help them connect meaningfully, both online and off.
+
+### Project Goals
+
+This project addresses the following goals for creating meaningful digital connections:
+
+- **Sparking Conversation & Reflection**: Users can discover new National Parks webcam views and share anonymous reflections about their experience
+- **Facilitating Dialogue**: An anonymous comment system allows people to connect over shared locations and perspectives
+- **Inspiring Participation**: Users can mark locations they've visited ("I've been here"), creating a sense of community and shared experience
+- **Encouraging IRL Connections**: By showcasing real National Parks locations with visit counters, the project encourages real-world exploration
+- **Sharing Perspectives**: Multiple users can view, reflect on, and discuss the same webcam views, finding common ground in the shared experience
+
+### Tech Stack
+
+- **Framework**: Next.js 16 (App Router)
+- **Deployment**: Vercel
+- **API**: National Parks Service Webcams API
+- **Styling**: Tailwind CSS
+
+---
 
 ## Getting Started
 
-First, run the development server:
+### Prerequisites
+
+- Node.js 20+ (required for Next.js 16)
+- npm, yarn, pnpm, or bun
+
+### Installation
+
+1. Clone the repository
+2. Install dependencies:
+
+```bash
+npm install
+```
+
+3. Create a `.env.local` file with your NPS API key:
+
+```env
+NPS_API_KEY=your_api_key_here
+```
+
+4. Run the development server:
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### Building for Production
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```bash
+npm run build
+npm start
+```
 
-## Learn More
+## API Reference
 
-To learn more about Next.js, take a look at the following resources:
+This project uses the [National Parks Service (NPS) Developer API](https://www.nps.gov/subjects/developer/api-documentation.htm#/webcams/getWebcams) for webcam data.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Deployment
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+The easiest way to deploy this Next.js app is using the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme).
 
-## Deploy on Vercel
+Check out the [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## License
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+MIT
