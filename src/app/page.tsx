@@ -3,10 +3,21 @@
 import { useState, useEffect } from 'react';
 import type { Webcam } from '@/lib/npsApi';
 
+interface CommentData {
+  visitCount: number;
+  comments: Array<{
+    text: string;
+    timestamp: string;
+  }>;
+}
+
 export default function Home() {
   const [webcam, setWebcam] = useState<Webcam | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [commentsData, setCommentsData] = useState<CommentData | null>(null);
+  const [newComment, setNewComment] = useState('');
+  const [localVisited, setLocalVisited] = useState(false);
 
   const fetchRandomWebcam = async () => {
     setLoading(true);
@@ -18,10 +29,63 @@ export default function Home() {
       }
       const data = await response.json();
       setWebcam(data);
+      setLocalVisited(false); // Reset visit status for new webcam
+      
+      // Fetch comments for this webcam
+      if (data.id) {
+        const commentsResponse = await fetch(`/api/webcam/${data.id}/comments`);
+        if (commentsResponse.ok) {
+          const commentsData = await commentsResponse.json();
+          setCommentsData(commentsData);
+        }
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleVisitClick = async () => {
+    if (!webcam || localVisited) return;
+    
+    try {
+      await fetch(`/api/webcam/${webcam.id}/comments`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'visit' }),
+      });
+      setLocalVisited(true);
+      // Refresh comments data
+      const response = await fetch(`/api/webcam/${webcam.id}/comments`);
+      if (response.ok) {
+        const data = await response.json();
+        setCommentsData(data);
+      }
+    } catch (err) {
+      console.error('Error recording visit:', err);
+    }
+  };
+
+  const handleSubmitComment = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!webcam || !newComment.trim()) return;
+
+    try {
+      await fetch(`/api/webcam/${webcam.id}/comments`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'comment', text: newComment }),
+      });
+      setNewComment('');
+      // Refresh comments data
+      const response = await fetch(`/api/webcam/${webcam.id}/comments`);
+      if (response.ok) {
+        const data = await response.json();
+        setCommentsData(data);
+      }
+    } catch (err) {
+      console.error('Error submitting comment:', err);
     }
   };
 
@@ -234,6 +298,89 @@ export default function Home() {
                     📍 {webcam.latitude.toFixed(4)}, {webcam.longitude.toFixed(4)}
                   </div>
                 )}
+              </div>
+            </div>
+
+            {/* Visit Counter and Comments Section */}
+            <div className="mx-auto mt-6 max-w-4xl overflow-hidden rounded-2xl bg-white shadow-xl dark:bg-zinc-800">
+              <div className="px-6 py-6">
+                {/* Visit Counter */}
+                <div className="mb-6 flex items-center justify-center gap-4">
+                  <button
+                    onClick={handleVisitClick}
+                    disabled={localVisited}
+                    className="inline-flex items-center gap-2 rounded-full border-2 border-blue-600 bg-transparent px-6 py-3 font-semibold text-blue-600 transition-all hover:bg-blue-600 hover:text-white disabled:bg-blue-600 disabled:text-white dark:border-blue-400 dark:text-blue-400 dark:hover:bg-blue-400 dark:hover:text-white"
+                  >
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      strokeWidth={2}
+                      stroke="currentColor"
+                      className="h-5 w-5"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        d="M9 12.75L11.25 15 15 9.75M21 12c0 1.268-.63 2.39-1.593 3.068a3.75 3.75 0 01-4.464-4.464l-3.5-3.5a3.75 3.75 0 00-5.304 0L7.05 8.051 9 12.75z"
+                      />
+                    </svg>
+                    {localVisited ? "I've been here" : "I've been here"}
+                  </button>
+                  {commentsData && commentsData.visitCount > 0 && (
+                    <p className="text-sm text-zinc-600 dark:text-zinc-400">
+                      {commentsData.visitCount} {commentsData.visitCount === 1 ? 'person' : 'people'} have visited this location
+                    </p>
+                  )}
+                </div>
+
+                {/* Comments Section */}
+                <div className="border-t border-zinc-200 pt-6 dark:border-zinc-700">
+                  <h3 className="mb-4 text-xl font-bold text-zinc-900 dark:text-zinc-50">
+                    Shared Reflections
+                  </h3>
+                  
+                  {/* Comment Input */}
+                  <form onSubmit={handleSubmitComment} className="mb-6">
+                    <textarea
+                      value={newComment}
+                      onChange={(e) => setNewComment(e.target.value)}
+                      placeholder="Share your thoughts about this place... (anonymous)"
+                      className="mb-3 w-full rounded-lg border border-zinc-300 bg-zinc-50 px-4 py-3 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-50"
+                      rows={3}
+                    />
+                    <button
+                      type="submit"
+                      disabled={!newComment.trim()}
+                      className="rounded-full bg-gradient-to-r from-blue-600 to-indigo-600 px-6 py-2 text-sm font-semibold text-white transition-all hover:from-blue-700 hover:to-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      Share Reflection
+                    </button>
+                  </form>
+
+                  {/* Comments List */}
+                  {commentsData && commentsData.comments.length > 0 && (
+                    <div className="space-y-3">
+                      {commentsData.comments.map((comment, index) => (
+                        <div
+                          key={index}
+                          className="rounded-lg bg-zinc-50 p-4 dark:bg-zinc-900/50"
+                        >
+                          <p className="text-zinc-800 dark:text-zinc-200">{comment.text}</p>
+                          <p className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">
+                            {new Date(comment.timestamp).toLocaleDateString()}
+                          </p>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  
+                  {(!commentsData || commentsData.comments.length === 0) && (
+                    <p className="text-center text-sm text-zinc-500 dark:text-zinc-400">
+                      No reflections yet. Be the first to share your thoughts!
+                    </p>
+                  )}
+                </div>
               </div>
             </div>
 
