@@ -50,17 +50,17 @@ export default function Home() {
     if (!webcam || localVisited) return;
     
     try {
-      await fetch(`/api/webcam/${webcam.id}/comments`, {
+      const response = await fetch(`/api/webcam/${webcam.id}/comments`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ action: 'visit' }),
       });
-      setLocalVisited(true);
-      // Refresh comments data
-      const response = await fetch(`/api/webcam/${webcam.id}/comments`);
+      
       if (response.ok) {
-        const data = await response.json();
-        setCommentsData(data);
+        // Get the updated data from the response
+        const updatedData = await response.json();
+        setCommentsData(updatedData);
+        setLocalVisited(true);
       }
     } catch (err) {
       console.error('Error recording visit:', err);
@@ -71,21 +71,29 @@ export default function Home() {
     e.preventDefault();
     if (!webcam || !newComment.trim()) return;
 
+    const commentText = newComment.trim();
+    
     try {
-      await fetch(`/api/webcam/${webcam.id}/comments`, {
+      // Submit the comment and get updated data in response
+      const response = await fetch(`/api/webcam/${webcam.id}/comments`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'comment', text: newComment }),
+        body: JSON.stringify({ action: 'comment', text: commentText }),
       });
-      setNewComment('');
-      // Refresh comments data
-      const response = await fetch(`/api/webcam/${webcam.id}/comments`);
-      if (response.ok) {
-        const data = await response.json();
-        setCommentsData(data);
+      
+      if (!response.ok) {
+        throw new Error('Failed to submit comment');
       }
+      
+      // Get the updated comments data from the response
+      const updatedData = await response.json();
+      setCommentsData(updatedData);
+      
+      // Clear the input after successful submission
+      setNewComment('');
     } catch (err) {
       console.error('Error submitting comment:', err);
+      alert('Failed to submit comment. Please try again.');
     }
   };
 

@@ -21,12 +21,16 @@ export async function POST(
   
   if (body.action === 'comment' && body.text) {
     addComment(id, body.text);
-    return NextResponse.json({ success: true });
+    // Return the updated data immediately
+    const updatedData = getWebcamData(id);
+    return NextResponse.json(updatedData);
   }
   
   if (body.action === 'visit') {
     incrementVisitCount(id);
-    return NextResponse.json({ success: true });
+    // Return the updated data immediately
+    const updatedData = getWebcamData(id);
+    return NextResponse.json(updatedData);
   }
   
   return NextResponse.json({ error: 'Invalid action' }, { status: 400 });
