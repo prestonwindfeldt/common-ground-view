@@ -8,7 +8,7 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   const { id } = await params;
-  const data = getWebcamData(id);
+  const data = await getWebcamData(id);
   return NextResponse.json(data);
 }
 
@@ -20,16 +20,16 @@ export async function POST(
   const body = await request.json();
   
   if (body.action === 'comment' && body.text) {
-    addComment(id, body.text);
+    await addComment(id, body.text);
     // Return the updated data immediately
-    const updatedData = getWebcamData(id);
+    const updatedData = await getWebcamData(id);
     return NextResponse.json(updatedData);
   }
   
   if (body.action === 'visit') {
-    incrementVisitCount(id);
+    await incrementVisitCount(id);
     // Return the updated data immediately
-    const updatedData = getWebcamData(id);
+    const updatedData = await getWebcamData(id);
     return NextResponse.json(updatedData);
   }
   

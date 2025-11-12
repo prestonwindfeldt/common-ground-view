@@ -1,61 +1,73 @@
-import fs from 'fs';
-import path from 'path';
+import connectDB from './mongodb';
+import { Webcam, type Comment, type WebcamData } from './models/Webcam';
 
-export interface Comment {
-  text: string;
-  timestamp: string;
-}
+export type { Comment, WebcamData };
 
-export interface WebcamData {
-  visitCount: number;
-  comments: Comment[];
-}
-
-const DATA_FILE = path.join(process.cwd(), 'data', 'comments.json');
-
-export function getWebcamData(webcamId: string): WebcamData {
+export async function getWebcamData(webcamId: string): Promise<WebcamData> {
   try {
-    const fileData = fs.readFileSync(DATA_FILE, 'utf-8');
-    const data = JSON.parse(fileData);
-    return data[webcamId] || { visitCount: 0, comments: [] };
+    await connectDB();
+    
+    const webcam = await Webcam.findOne({ webcamId });
+    
+    if (!webcam) {
+      return { visitCount: 0, comments: [] };
+    }
+    
+    return {
+      visitCount: webcam.visitCount,
+      comments: webcam.comments,
+    };
   } catch (error) {
-    console.error('Error reading comments file:', error);
+    console.error('Error reading webcam data:', error);
     return { visitCount: 0, comments: [] };
   }
 }
 
-export function addComment(webcamId: string, commentText: string): void {
+export async function addComment(webcamId: string, commentText: string): Promise<void> {
   try {
-    const fileData = fs.readFileSync(DATA_FILE, 'utf-8');
-    const data = JSON.parse(fileData);
+    await connectDB();
     
-    if (!data[webcamId]) {
-      data[webcamId] = { visitCount: 0, comments: [] };
+    const webcam = await Webcam.findOne({ webcamId });
+    
+    if (webcam) {
+      webcam.comments.push({
+        text: commentText,
+        timestamp: new Date().toISOString(),
+      });
+      await webcam.save();
+    } else {
+      // Create new webcam document
+      await Webcam.create({
+        webcamId,
+        visitCount: 0,
+        comments: [{
+          text: commentText,
+          timestamp: new Date().toISOString(),
+        }],
+      });
     }
-    
-    data[webcamId].comments.push({
-      text: commentText,
-      timestamp: new Date().toISOString(),
-    });
-    
-    fs.writeFileSync(DATA_FILE, JSON.stringify(data, null, 2));
   } catch (error) {
-    console.error('Error writing comments file:', error);
+    console.error('Error adding comment:', error);
   }
 }
 
-export function incrementVisitCount(webcamId: string): void {
+export async function incrementVisitCount(webcamId: string): Promise<void> {
   try {
-    const fileData = fs.readFileSync(DATA_FILE, 'utf-8');
-    const data = JSON.parse(fileData);
+    await connectDB();
     
-    if (!data[webcamId]) {
-      data[webcamId] = { visitCount: 0, comments: [] };
+    const webcam = await Webcam.findOne({ webcamId });
+    
+    if (webcam) {
+      webcam.visitCount += 1;
+      await webcam.save();
+    } else {
+      // Create new webcam document
+      await Webcam.create({
+        webcamId,
+        visitCount: 1,
+        comments: [],
+      });
     }
-    
-    data[webcamId].visitCount += 1;
-    
-    fs.writeFileSync(DATA_FILE, JSON.stringify(data, null, 2));
   } catch (error) {
     console.error('Error incrementing visit count:', error);
   }
